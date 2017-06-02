@@ -8,7 +8,7 @@ import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    Button button1;
+    Button button1, button2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,15 +17,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         button1 = (Button) findViewById(R.id.button1);
         button1.setOnClickListener(this);
+
+        button2 = (Button) findViewById(R.id.button2);
+        button2.setOnClickListener(this);
     }
 
 
     @Override
     public void onClick(View v) {
+        Intent intent;
         switch (v.getId()) {
+
             case R.id.button1:
-                Intent intent = new Intent(this, PlayerActivity.class);
-                intent.putExtra("URI", "http://html5demos.com/assets/dizzy.mp4");
+                intent = new Intent(this, PlayerActivity.class);
+                intent.putExtra(PlayerActivity.VIDEO_TYPE, PlayerActivity.SIMPLE_VIDEO);
+                intent.putExtra(PlayerActivity.VIDEO_URI, "http://html5demos.com/assets/dizzy.mp4");
+                startActivity(intent);
+                break;
+
+            case R.id.button2:
+                intent = new Intent(this, PlayerActivity.class);
+                intent.putExtra(PlayerActivity.VIDEO_TYPE, PlayerActivity.VIDEO_WITH_SUBTITLE);
+                intent.putExtra(PlayerActivity.VIDEO_URI, "http://www.storiesinflight.com/js_videosub/jellies.mp4");
+                intent.putExtra(PlayerActivity.SUBTITLE_URI, "http://www.storiesinflight.com/js_videosub/jellies.srt");
                 startActivity(intent);
                 break;
 

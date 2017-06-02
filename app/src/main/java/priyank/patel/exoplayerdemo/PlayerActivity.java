@@ -5,14 +5,18 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.MergingMediaSource;
+import com.google.android.exoplayer2.source.SingleSampleMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
@@ -20,6 +24,7 @@ import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
 
 
@@ -32,12 +37,20 @@ public class PlayerActivity extends AppCompatActivity {
   private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
   private static final String TAG = "PlayerActivity";
 
+  public static final String VIDEO_TYPE = "video_type";
+  public static final String VIDEO_URI = "video_uri";
+  public static final String SUBTITLE_URI = "subtitle_uri";
+
+  public static final int SIMPLE_VIDEO        = 101;
+  public static final int VIDEO_WITH_SUBTITLE = 102;
+
   private SimpleExoPlayer player;
   private SimpleExoPlayerView playerView;
 
   private long playbackPosition;
   private int currentWindow;
   private boolean playWhenReady = true;
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -92,10 +105,19 @@ public class PlayerActivity extends AppCompatActivity {
       player.seekTo(currentWindow, playbackPosition);
     }
 
-    String uri = getIntent().getStringExtra("URI");
-    Log.d(TAG, "initializePlayer URI : " + uri);
+    int videoType = getIntent().getIntExtra(VIDEO_TYPE, SIMPLE_VIDEO);
+    String videoUri = getIntent().getStringExtra(VIDEO_URI);
+    String subtitleUri = getIntent().getStringExtra(SUBTITLE_URI);
+    Log.d(TAG, "initializePlayer videoUri : " + videoUri + ", subtitleUri : " + subtitleUri);
 
-    MediaSource mediaSource = buildMediaSource(Uri.parse(uri));
+    MediaSource mediaSource = null;
+    if( videoType == SIMPLE_VIDEO ) {
+      mediaSource = buildMediaSource(Uri.parse(videoUri));
+    }
+    else if( videoType == VIDEO_WITH_SUBTITLE ) {
+      mediaSource = buildMergingMediaSource(Uri.parse(videoUri), Uri.parse(subtitleUri));
+    }
+
     player.prepare(mediaSource, true, false);
   }
 
@@ -119,5 +141,24 @@ public class PlayerActivity extends AppCompatActivity {
     // This is the MediaSource representing the media to be played.
     return new ExtractorMediaSource(uri, dataSourceFactory, extractorsFactory, null, null);
   }
+
+  private MediaSource buildMergingMediaSource(Uri videoUri,Uri subtitleUri) {
+    // Measures bandwidth during playback. Can be null if not required.
+    DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
+    // Produces DataSource instances through which media data is loaded.
+    DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "ExoPlayerDemo"), bandwidthMeter);
+    // Produces Extractor instances for parsing the media data.
+    ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
+    MediaSource videoSource = new ExtractorMediaSource(videoUri,dataSourceFactory, extractorsFactory, null, null);
+
+    Format textFormat = Format.createTextSampleFormat(null, MimeTypes.APPLICATION_SUBRIP,
+            null, Format.NO_VALUE, Format.NO_VALUE, "en", null);
+
+    MediaSource subtitleSource = new SingleSampleMediaSource(subtitleUri, dataSourceFactory, textFormat, C.TIME_UNSET);
+    // Plays the video with the sideloaded subtitle.
+    return new MergingMediaSource(videoSource, subtitleSource);
+  }
+
+
 
 }

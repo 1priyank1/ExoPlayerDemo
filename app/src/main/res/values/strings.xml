@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">ExoPlayerDemo</string>
+
+    <string name="play_video">Play Video From URI</string>
+    <string name="video_with_subtitle">Video with the sideloaded subtitle</string>
+
 </resources>
