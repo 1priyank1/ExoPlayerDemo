@@ -13,6 +13,7 @@ import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.LoopingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -41,10 +42,13 @@ public class PlayerActivity extends AppCompatActivity {
   public static final String VIDEO_TYPE = "video_type";
   public static final String VIDEO_URI = "video_uri";
   public static final String SUBTITLE_URI = "subtitle_uri";
+  public static final String VIDEO_URI_LIST = "video_uri_list";
+
 
   public static final int SIMPLE_VIDEO        = 101;
   public static final int VIDEO_WITH_SUBTITLE = 102;
   public static final int LOOPING_VIDEO       = 103;
+  public static final int SEQUENTIAL_VIDEO    = 104;
 
   private SimpleExoPlayer player;
   private SimpleExoPlayerView playerView;
@@ -127,19 +131,36 @@ public class PlayerActivity extends AppCompatActivity {
   public MediaSource getMediaSource(int videoType) {
     String videoUri = getIntent().getStringExtra(VIDEO_URI);
     String subtitleUri = getIntent().getStringExtra(SUBTITLE_URI);
+    String[] videoUriList = getIntent().getStringArrayExtra(VIDEO_URI_LIST);
     Log.d(TAG, "initializePlayer videoUri : " + videoUri + ", subtitleUri : " + subtitleUri);
 
+
     MediaSource mediaSource = null;
-    if( videoType == SIMPLE_VIDEO ) {
-      mediaSource = buildMediaSource(Uri.parse(videoUri));
+    switch (videoType) {
+      case SIMPLE_VIDEO:
+        mediaSource = buildMediaSource(Uri.parse(videoUri));
+        break;
+
+      case VIDEO_WITH_SUBTITLE:
+        mediaSource = buildMergingMediaSource(Uri.parse(videoUri), Uri.parse(subtitleUri));
+        break;
+
+      case LOOPING_VIDEO:
+        MediaSource mSource = buildMediaSource(Uri.parse(videoUri));
+        mediaSource = new LoopingMediaSource(mSource);
+        break;
+
+      case SEQUENTIAL_VIDEO:
+        if( null != videoUriList && videoUriList.length > 1) {
+          // Plays the first video, then the second video.
+          mediaSource = new ConcatenatingMediaSource(buildMediaSource(Uri.parse(videoUriList[0])), buildMediaSource(Uri.parse(videoUriList[1])));
+        }
+        break;
+
+      default:
+        break;
     }
-    else if( videoType == VIDEO_WITH_SUBTITLE ) {
-      mediaSource = buildMergingMediaSource(Uri.parse(videoUri), Uri.parse(subtitleUri));
-    }
-    else if( videoType == LOOPING_VIDEO ) {
-      MediaSource mSource = buildMediaSource(Uri.parse(videoUri));
-      mediaSource = new LoopingMediaSource(mSource);
-    }
+
     return mediaSource;
   }
 
