@@ -8,7 +8,7 @@ import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    Button button1, button2;
+    Button button1, button2, button3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +20,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         button2 = (Button) findViewById(R.id.button2);
         button2.setOnClickListener(this);
+
+        button3 = (Button) findViewById(R.id.button3);
+        button3.setOnClickListener(this);
     }
 
 
@@ -40,6 +43,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 intent.putExtra(PlayerActivity.VIDEO_TYPE, PlayerActivity.VIDEO_WITH_SUBTITLE);
                 intent.putExtra(PlayerActivity.VIDEO_URI, "http://www.storiesinflight.com/js_videosub/jellies.mp4");
                 intent.putExtra(PlayerActivity.SUBTITLE_URI, "http://www.storiesinflight.com/js_videosub/jellies.srt");
+                startActivity(intent);
+                break;
+
+            case R.id.button3:
+                intent = new Intent(this, PlayerActivity.class);
+                intent.putExtra(PlayerActivity.VIDEO_TYPE, PlayerActivity.LOOPING_VIDEO);
+                intent.putExtra(PlayerActivity.VIDEO_URI, "http://html5demos.com/assets/dizzy.mp4");
                 startActivity(intent);
                 break;
 

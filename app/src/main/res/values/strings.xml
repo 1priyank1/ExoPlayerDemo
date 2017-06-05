@@ -3,5 +3,6 @@
 
     <string name="play_video">Play Video From URI</string>
     <string name="video_with_subtitle">Video with the sideloaded subtitle</string>
+    <string name="looping_video">Looping a Video</string>
 
 </resources>

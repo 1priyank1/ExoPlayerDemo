@@ -14,6 +14,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.LoopingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.MergingMediaSource;
 import com.google.android.exoplayer2.source.SingleSampleMediaSource;
@@ -43,6 +44,7 @@ public class PlayerActivity extends AppCompatActivity {
 
   public static final int SIMPLE_VIDEO        = 101;
   public static final int VIDEO_WITH_SUBTITLE = 102;
+  public static final int LOOPING_VIDEO       = 103;
 
   private SimpleExoPlayer player;
   private SimpleExoPlayerView playerView;
@@ -106,17 +108,7 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     int videoType = getIntent().getIntExtra(VIDEO_TYPE, SIMPLE_VIDEO);
-    String videoUri = getIntent().getStringExtra(VIDEO_URI);
-    String subtitleUri = getIntent().getStringExtra(SUBTITLE_URI);
-    Log.d(TAG, "initializePlayer videoUri : " + videoUri + ", subtitleUri : " + subtitleUri);
-
-    MediaSource mediaSource = null;
-    if( videoType == SIMPLE_VIDEO ) {
-      mediaSource = buildMediaSource(Uri.parse(videoUri));
-    }
-    else if( videoType == VIDEO_WITH_SUBTITLE ) {
-      mediaSource = buildMergingMediaSource(Uri.parse(videoUri), Uri.parse(subtitleUri));
-    }
+    MediaSource mediaSource = getMediaSource(videoType);
 
     player.prepare(mediaSource, true, false);
   }
@@ -129,6 +121,26 @@ public class PlayerActivity extends AppCompatActivity {
       player.release();
       player = null;
     }
+  }
+
+
+  public MediaSource getMediaSource(int videoType) {
+    String videoUri = getIntent().getStringExtra(VIDEO_URI);
+    String subtitleUri = getIntent().getStringExtra(SUBTITLE_URI);
+    Log.d(TAG, "initializePlayer videoUri : " + videoUri + ", subtitleUri : " + subtitleUri);
+
+    MediaSource mediaSource = null;
+    if( videoType == SIMPLE_VIDEO ) {
+      mediaSource = buildMediaSource(Uri.parse(videoUri));
+    }
+    else if( videoType == VIDEO_WITH_SUBTITLE ) {
+      mediaSource = buildMergingMediaSource(Uri.parse(videoUri), Uri.parse(subtitleUri));
+    }
+    else if( videoType == LOOPING_VIDEO ) {
+      MediaSource mSource = buildMediaSource(Uri.parse(videoUri));
+      mediaSource = new LoopingMediaSource(mSource);
+    }
+    return mediaSource;
   }
 
   private MediaSource buildMediaSource(Uri uri) {
